@@ -31,6 +31,10 @@ class Time():
 
 		return True
 
+	def in_timespan(self, new_time):
+		return self.Date == new_time.Date and self.start < new_time.start < new_time.end < self.end
+
+
 
 	'''
 	assume yyyy/mm/dd
@@ -73,6 +77,9 @@ def test():
 	print "test4"
 	mytime = Time("2018/5/2", "2:00","13:30")
 	print mytime
- 
+	print "should be true: " + str(mytime.in_timespan(Time("2018/5/2", "3:00","4:00")))
+ 	print "should be false: " + str(mytime.in_timespan(Time("2018/5/3", "3:00","4:00")))
+ 	print "should be false: " + str(mytime.in_timespan(Time("2018/5/2", "1:59","4:00")))
+
 if __name__ == "__main__":
 	test()

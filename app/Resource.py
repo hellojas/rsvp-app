@@ -1,6 +1,23 @@
 import Time
 
-class Resource():
+
+class Tag(ndb.Model):
+	name = ndb.StringProperty()
+
+class Resource(ndb.Model):
+    """A main model for representing an individual Guestbook entry."""
+    author = ndb.StructuredProperty(Author)
+    content = ndb.StringProperty(indexed=False)
+    date = ndb.DateTimeProperty(auto_now_add=True)
+    tags = ndb.StructuredProperty(Tag, repeated=True)
+
+class Resource(ndb.Model):
+	name = ndb.StringProperty()
+	availability = StructuredProperty(Time)
+    tags = ndb.StructuredProperty(Tag, repeated=True)
+    rsvps = ndb.StructuredProperty(Reservation, repeated=True)
+
+
 	def __init__(self, name, avail, tags):
 		self.name = name
 		self.availability = availability

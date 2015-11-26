@@ -39,6 +39,8 @@ nosetests.xml
 bin
 lib
 include
+env
+env/*
 
 # Mac OS X custom attribute files
 .DS_Store

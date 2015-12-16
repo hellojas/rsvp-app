@@ -1,0 +1,112 @@
+
+{% extends "base.html" %}
+{% block title %}OpenResource{% endblock %}
+{% block head %}
+<head>
+    {{ super() }}
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" href="/bootstrap/css/bootstrap-datepicker-custom.css">
+
+<script type="text/javascript" src="http://jonthornton.github.io/jquery-timepicker/jquery.timepicker.js"></script>
+
+
+<link rel="stylesheet" href="http://jonthornton.github.io/jquery-timepicker/jquery.timepicker.css">
+
+
+<script type="text/javascript"> 
+  function validateForm() {
+    var name = document.forms["createResource"]["resourceName"].value
+    var date = document.forms["createResource"]["date"].value
+    var timestart = document.forms["createResource"]["timeStart"].value.toString()
+    var timeend = document.forms["createResource"]["timeEnd"].value.toString()
+
+    var timestart_int = parseInt(timestart.slice(0,2)+ "" + timestart.slice(3,5),10)
+    var timeend_int = parseInt(timeend.slice(0,2)+ "" + timeend.slice(3,5),10)
+    
+    if (timestart_int >= timeend_int) {
+      alert("Start time must be before end time!" + timestart_int + " " + timeend_int );
+      return false;
+    }
+
+    return true;
+  }
+
+</script>
+
+<script type="text/javascript"> 
+$(function(){
+   $('#timeStart').timepicker({
+       'timeFormat': 'H:i'
+   }); 
+});
+
+$(function(){
+   $('#timeEnd').timepicker({
+   'timeFormat': 'H:i'
+    }); 
+});
+
+$(function() {
+    $("#datepicker").datepicker({minDate: 0}).datepicker("setDate", new Date());
+});
+
+
+</script>
+<!--<script>
+$(function() {
+    $( "#datepicker" ).datepicker();
+});
+</script>-->
+    {% endblock %}
+</head>
+{% block content %}
+
+
+
+  <div class="starter-template">
+    <h1>Please fill out the form to add a resource!</h1>
+    <p class="lead">You must include a resource name and its available reservation times.</p>
+  </div>
+<!-- 
+When a resource is created, it should allow the following data about a resource to be entered: the name, availability hours (will be any two times within the same day, e.g. 9am - 5pm), and a set of tags that describe the type of resource (see below).
+ -->
+
+
+ <div class="container">
+
+  <form id="createResource" method="post" onsubmit="return validateForm()">
+
+<div class="input-group">
+  <span class="input-group-addon" id="basic-addon1">Resource name</span>
+  <input name="resourceName" type="text" class="form-control" placeholder="Classroom" aria-describedby="basic-addon1" required>
+</div>
+
+
+<div class="container">
+  <br>
+   <p> Add your resource availability:</p>
+
+   <div class="column-left">Select Date <input name="date" type="text" id="datepicker" required></p></div>
+   <div class="column-center"><p>Select Time
+  <input name="timeStart" type="text" id="timeStart" required/></p></div>
+   <div class="column-right"><p>Select Time
+  <input name="timeEnd" type="text" id="timeEnd" required/></p></div>
+
+      <input type="submit" value="Submit" href>
+  </div>
+</form>
+
+<!--     <form action="/add">
+        <input type="submit" class="btn" value="Add a Reservation">
+    </form>
+
+      <hr>
+
+      <form>Guestbook name:
+        <input value="{{ guestbook_name }}" name="guestbook_name">
+        <input type="submit" value="switch">
+      </form> -->
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}OpenResource{% endblock %}
+{% block head %}
+<head>
+    {{ super() }}
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" href="/bootstrap/css/bootstrap-datepicker-custom.css">
+
+
+<script type="text/javascript"> 
+$(function() {
+    $("#datepicker").datepicker();
+});
+</script>
+<!--<script>
+$(function() {
+    $( "#datepicker" ).datepicker();
+});
+</script>-->
+    {% endblock %}
+</head>
+{% block content %}
+
+
+
+  <div class="starter-template">
+    <h1>Please fill out the form to add a resource!</h1>
+    <p class="lead">You must include a resource name and its available reservation times.</p>
+  </div>
+<!-- 
+When a resource is created, it should allow the following data about a resource to be entered: the name, availability hours (will be any two times within the same day, e.g. 9am - 5pm), and a set of tags that describe the type of resource (see below).
+ -->
+<div class="input-group">
+  <span class="input-group-addon" id="basic-addon1">Resource name</span>
+  <input type="text" class="form-control" placeholder="Classroom" aria-describedby="basic-addon1">
+</div>
+<div class="datepicker-cal">
+    <p> Add resource availability</p>
+
+    <p>Select Date <input type="text" id="datepicker"></p>
+</div>
+
+<!--       <form action="/add?guestbook_name={{ guestbook_name }}" method="post">
+        <div><textarea name="content" class="input-block-level" rows="3"></textarea></div>
+        <div><input type="submit" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
+      </form> -->
+
+    <form action="/add">
+        <input type="submit" class="btn" value="Add a Reservation">
+    </form>
+
+      <hr>
+
+      <form>Guestbook name:
+        <input value="{{ guestbook_name }}" name="guestbook_name">
+        <input type="submit" value="switch">
+      </form>
+
+      <a href="{{ url|safe }}">{{ url_linktext }}</a>
+{% endblock %}

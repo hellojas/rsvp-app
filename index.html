@@ -2,18 +2,63 @@
 {% block title %}OpenResource{% endblock %}
 
 {% block content %}
-
+<br><br>
      <div class="container">
-      There are {{ resources_size }} available resources in the system:
 
-      {% for resource in resources %}
-      <div class="row">
-          <b>{{ resource.name }}</b>: {{ resource.availability.Date }} from  {{ resource.availability.start }} until {{ resource.availability.end }}     
-      </div>
+<h2> User Owned Resources ({{ resources_user|length }}): </h2>
+Current user: {{ user.user_id() }} at {{ user.email() }}
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Date</th>
+      <th>Star Time</th>
+      <th>End Time</th>
+      <th>Edit</th>
+    </tr>
+  </thead>
+      {% for resource in resources_user %}
 
+  <tbody>
+    <tr>
+      <th scope="row">{{ resource.name }} </th>
+      <td>{{ resource.availability.Date }}</td>
+      <td>{{ resource.availability.start }}</td>
+      <td>{{ resource.availability.end }}</td>
+      <td><a href="/reserve?={{ resource.key.urlsafe() }}">Reserve</a></td>
+    </tr>
+  </tbody>
+  {% endfor %}
+
+</table>
+
+<h2> Available Resources ({{ resources_all|length }}): </h2>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Date</th>
+      <th>Star Time</th>
+      <th>End Time</th>
+      <th>View</th>
+    </tr>
+  </thead>
+      {% for resource in resources_all %}
+  <tbody>
+    <tr>
+      <th scope="row">{{ resource.name }} 
+    {% if resource.creator.identity == user.user_id() %}
+    (yours) 
+    {% endif %} 
+      </th>
+      <td>{{ resource.availability.Date }}</td>
+      <td>{{ resource.availability.start }}</td>
+      <td>{{ resource.availability.end }}</td>
+      <td><a href="/resource?rkey={{ resource.key.urlsafe() }}">View</a></td>
+    </tr>
+  </tbody>
       {% endfor %}
-
-
+</table>
 
       {% for greeting in greetings %}
       <div class="row">
@@ -30,22 +75,6 @@
       </div>
       {% endfor %}
 
-<!--       <form action="/add?guestbook_name={{ guestbook_name }}" method="post">
-        <div><textarea name="content" class="input-block-level" rows="3"></textarea></div>
-        <div><input type="submit" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
-      </form> -->
 
-    <form action="/add">
-        <input type="submit" class="btn" value="Add a Reservation">
-    </form>
-
-      <hr>
-
-      <form>Guestbook name:
-        <input value="{{ guestbook_name }}" name="guestbook_name">
-        <input type="submit" value="switch">
-      </form>
-
-      <a href="{{ url|safe }}">{{ url_linktext }}</a>
     </div>
 {% endblock %}

@@ -5,14 +5,17 @@
 <br><br>
      <div class="container">
 
-<h2> User Owned Resources ({{ resources_user|length }}): </h2>
+{% if user %}
+<h2> User Owned Resources <span class="badge">{{ resources_user|length }}</span></h2>
+
 Current user: {{ user.user_id() }} at {{ user.email() }}
-<table class="table table-sm">
+
+<table class="table table-sm table-hover">
   <thead>
     <tr>
-      <th>Name</th>
+      <th>Resource</th>
       <th>Date</th>
-      <th>Star Time</th>
+      <th>Start Time</th>
       <th>End Time</th>
       <th>Edit</th>
     </tr>
@@ -25,36 +28,42 @@ Current user: {{ user.user_id() }} at {{ user.email() }}
       <td>{{ resource.availability.Date }}</td>
       <td>{{ resource.availability.start }}</td>
       <td>{{ resource.availability.end }}</td>
-      <td><a href="/reserve?={{ resource.key.urlsafe() }}">Reserve</a></td>
+      <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td>
     </tr>
   </tbody>
   {% endfor %}
 
 </table>
 
-<h2> Available Resources ({{ resources_all|length }}): </h2>
-<table class="table table-sm">
+{% else %}
+Viewing as guest, please login to create resources or make reservations!
+{% endif %}
+
+<h2> Available Resources <span class="badge">{{ resources_all|length }}</span></h2>
+<table class="table table-sm table-hover" >
   <thead>
     <tr>
       <th>Name</th>
       <th>Date</th>
       <th>Star Time</th>
       <th>End Time</th>
-      <th>View</th>
     </tr>
   </thead>
       {% for resource in resources_all %}
   <tbody>
     <tr>
-      <th scope="row">{{ resource.name }} 
+      <th scope="row"><a href="/view?rkey={{ resource.key.urlsafe() }}">{{ resource.name }} </a>
+    {% if user %}
     {% if resource.creator.identity == user.user_id() %}
-    (yours) 
+  <span class="label label-info">yours</span>
     {% endif %} 
+    {% endif %} 
+
       </th>
       <td>{{ resource.availability.Date }}</td>
       <td>{{ resource.availability.start }}</td>
       <td>{{ resource.availability.end }}</td>
-      <td><a href="/resource?rkey={{ resource.key.urlsafe() }}">View</a></td>
+      <!-- <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td> -->
     </tr>
   </tbody>
       {% endfor %}

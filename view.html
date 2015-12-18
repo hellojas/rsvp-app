@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}OpenResource - View Resource Details {% endblock %}
+{% block head %}
+
+
+<script type="text/javascript">
+
+function selectTag(){
+  var item = document.getElementById("relatedTags");
+
+  var myselect = document.getElementById("tagOption");
+  // alert(myselect.options[myselect.selectedIndex].value);
+  if (myselect.options[myselect.selectedIndex].value != 'Select Tag') {
+    if (item) {
+    if(item.className == 'hidden'){
+        item.className = 'unhidden';
+          document.getElementById('tagsQuery').src = "google.com";
+    }
+  }}
+}
+
+</script>
+
+
+{% endblock %}
+
+
+{% block content %}
+<br><br>
+<div class="container">
+{% if resource %}
+
+<div class="panel panel-info">
+  <div class="panel-heading">
+    <h3 class="panel-title">Resource Details</h3>
+  </div>
+    <div class="panel-body">
+      <font size="4pt">
+        Name: {{ resource.name }} <br>
+        Date: {{ resource.availability.Date }} <br>
+        Start Time: {{ resource.availability.start }} <br>
+        End Time: {{ resource.availability.end }} <br>
+        Tags: {{ resource.tags }} <br>
+
+        {% if user and user.user_id() == resource.creator.identity %}
+          <a href="/edit?rkey={{ resource.key.urlsafe() }}">Edit</a></td>
+        {% else %}
+          <a href="/reserve?rkey={{ resource.key.urlsafe() }}">Reserve</a></td>
+        {% endif %}
+      </font>
+      <br>
+    </div>
+  </div>
+
+
+{% if resource.tags|length > 0 %} 
+<div class="panel panel-info">
+  <div class="panel-heading">
+        <h3 class="panel-title">Recommended Resources</h3>
+  </div>
+    <div class="panel-body">
+
+<select class="form-control"  onchange="document.getElementById('tagsQuery').src = this.options[this.selectedIndex].value" id="tagOption">>
+  <option value="" disabled selected style="display:none;">Search by current resource tag!</option>
+      {% for tag in resource.tags %}
+      <option value="/tags?label={{ tag }}">{{ tag }}</option>
+    {% endfor %}
+
+</select>
+{% endif %}
+
+<div class="embed-responsive embed-responsive-16by9">    
+<iframe id="tagsQuery"   height="315"  class="embed-responsive-item" src="/tags">
+</iframe>
+</div>
+<!-- </div> -->
+
+{% endif %}
+
+  </div>
+</div>
+
+<nav>
+  <ul class="pager">
+    <li><a href="/">Back</a></li>
+  </ul>
+</nav>
+
+    </div>
+{% endblock %}

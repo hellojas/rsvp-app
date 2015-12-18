@@ -41,10 +41,10 @@ class Time(ndb.Model):
     end = ndb.StringProperty(indexed=False)
 
 class Tag(ndb.Model):
-    label = ndb.StringProperty()
+    label = ndb.StringProperty(indexed=True)
 
     def __repr__(self):
-        return "".join(self.label)
+        return self.label
 
 class Author(ndb.Model):
     """Sub model for representing an author."""
@@ -101,12 +101,15 @@ class MainPage(webapp2.RequestHandler):
         resource_query_all = Resource.query().order(Resource.last_rsvp)
         resources_all = resource_query_all.fetch()
 
-        resource_query_user = Resource.query(
-            Resource.creator == Author(
-                identity = user.user_id(),
-                email=user.email())).order(Resource.last_rsvp)
-            
-        resources_user = resource_query_user.fetch()
+        if user:
+            resource_query_user = Resource.query(
+                Resource.creator == Author(
+                    identity = user.user_id(),
+                    email=user.email())).order(Resource.last_rsvp)
+                
+            resources_user = resource_query_user.fetch()
+        else:
+            resources_user = []
 
 
         template_values = {
@@ -186,6 +189,7 @@ class AddResourcePage(webapp2.RequestHandler):
 
         for tag_str in res_tags:
             tag = Tag(label = tag_str)
+            tag.put()
             resource.tags.append(tag)
 
         resource.put()
@@ -263,15 +267,171 @@ class ViewResourcePage(webapp2.RequestHandler):
             'resource': resource,
         }
 
-        template = JINJA_ENVIRONMENT.get_template('resource.html')
+        template = JINJA_ENVIRONMENT.get_template('view.html')
+        self.response.write(template.render(template_values))
+
+class EditResourcePage(webapp2.RequestHandler):
+
+    def get(self):
+
+        key = ndb.Key(urlsafe=self.request.get('rkey'))
+        resource = key.get()
+
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resource': resource,
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('edit.html')
         self.response.write(template.render(template_values))
 
 
+    def post(self):
+        user = users.get_current_user()
+
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        key = ndb.Key(urlsafe=self.request.get('rkey'))
+        resource = key.get()
+
+        # if users.get_current_user():
+        #     resource.creator = Author(
+        #         identity = user.user_id(),
+        #         email=user.email())
+
+        resource.name = cgi.escape(self.request.get('resourceName'))
+
+        res_date = cgi.escape(self.request.get('date'))
+        res_start = cgi.escape(self.request.get('timeStart'))
+        res_end = cgi.escape(self.request.get('timeEnd'))
+
+        resource.availability = Time(
+            Date = res_date,
+            start = res_start,
+            end = res_end)
+
+        resource.last_rsvp = parseTimeToValue(
+            res_date, res_start, res_end)
+
+        res_tags = cgi.escape(self.request.get('tags')).split(",")
+        resource.tags[:] = []
+
+        for tag_str in res_tags:
+            tag = Tag(label = tag_str)
+            resource.tags.append(tag)
+
+        resource.put()
+
+
+        resource_query_all = Resource.query().order(-Resource.last_rsvp)
+        resources_all = resource_query_all.fetch()
+
+        resource_query_user = Resource.query(
+            Resource.creator == Author(
+                identity = user.user_id(),
+                email=user.email()))
+            
+        resources_user = resource_query_user.fetch()
+
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resources_all':resources_all,
+            'resources_user':resources_user,
+        }
+
+
+
+        # template = JINJA_ENVIRONMENT.get_template('index.html')
+        # self.response.write(template.render(template_values))
+        self.redirect('/')
+
+class TagsQueryPage(webapp2.RequestHandler):
+
+    def get(self):
+
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        if self.request.get('label'):
+            label = cgi.escape(self.request.get('label'))
+            resource_query_tag = Resource.query(
+                Resource.tags == Tag(label=label))
+            resources_tag  = resource_query_tag.fetch()
+
+            template_values = {
+                'user': user,
+                'url': url,
+                'url_linktext': url_linktext,
+                'resources_tag':resources_tag,
+                'tag':label
+            }
+
+            template = JINJA_ENVIRONMENT.get_template('tags.html')
+            self.response.write(template.render(template_values))
+        else: 
+            template_values = {
+                'user': user,
+                'url': url,
+                'url_linktext': url_linktext,
+                'resources_tag':None,
+            }
+            template = JINJA_ENVIRONMENT.get_template('tags.html')
+            self.response.write(template.render(template_values))    
+            # def post(self):
+    #     user = users.get_current_user()
+
+    #     if user:
+    #         url = users.create_logout_url(self.request.uri)
+    #         url_linktext = 'Logout'
+    #     else:
+    #         url = users.create_login_url(self.request.uri)
+    #         url_linktext = 'Login'
+
+
+    #     key = ndb.Key(urlsafe=self.request.get('tkey'))
+    #     tag = key.get()
+
+    #     resource_query_tag = Resource.query()(Resource.tag.label = tag.label)
+    #     resources_tag  = resource_query_tag.fetch()
+
+    #     template_values = {
+    #         'user': user,
+    #         'url': url,
+    #         'url_linktext': url_linktext,
+    #         'resources_tag':resources_user,
+    #     }
+
+    #     self.redirect('/')
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/add', AddResourcePage),
     ('/submit', Guestbook),
-    ('/resource', ViewResourcePage)
+    ('/view', ViewResourcePage),
+    ('/edit', EditResourcePage),
+    ('/tags',TagsQueryPage)
 
 ], debug=True)

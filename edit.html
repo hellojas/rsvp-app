@@ -1,0 +1,181 @@
+
+{% extends "base.html" %}
+{% block title %}OpenResource{% endblock %}
+{% block head %}
+<head>
+    {{ super() }}
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" href="/bootstrap/css/bootstrap-datepicker-custom.css">
+
+<!-- <script type="text/javascript" src="http://jonthornton.github.io/jquery-timepicker/jquery.timepicker.js"></script>
+<link rel="stylesheet" href="http://jonthornton.github.io/jquery-timepicker/jquery.timepicker.css">
+ -->
+<script type="text/javascript" src="/bootstrap/js/jquery.timepicker.js"></script>
+<link rel="stylesheet" href="/bootstrap/css/jquery.timepicker.css">
+
+<script src="//cdn.jsdelivr.net/bootstrap.tagsinput/0.4.2/bootstrap-tagsinput.min.js"></script>
+<link rel="stylesheet" href="//cdn.jsdelivr.net/bootstrap.tagsinput/0.4.2/bootstrap-tagsinput.css" />
+
+
+
+<style type="text/css">
+.bootstrap-tagsinput {
+    width: 100%;
+}
+.label {
+    line-height: 2 !important;
+}
+
+</style>
+
+<script type="text/javascript"> 
+  function validateForm() {
+    var name = document.forms["createResource"]["resourceName"].value
+    var date = document.forms["createResource"]["date"].value
+    var timestart = document.forms["createResource"]["timeStart"].value.toString()
+    var timeend = document.forms["createResource"]["timeEnd"].value.toString()
+    var tags = document.forms["createResource"]["tags"].value.toString()
+
+    var re_time = new RegExp("^[0-2][0-9]:[0-5][0-9]$");
+
+    if (!timestart.match(re_time)) {
+      alert("Not a valid start time!");
+      return false;
+    }
+
+    if (!timeend.match(re_time)) {
+      alert("Not a valid end time!");
+      return false;
+    }
+
+    var re_date = new RegExp("^[0-1][0-9]/[0-3][0-9]/[2][0][0-9][0-9]$");
+    
+    if (!date.match(re_date)) {
+      alert("Not a valid date!");
+      return false;
+    }
+
+    var timestart_str = timestart.slice(0,2)+ "" + timestart.slice(3,5)
+    var timeend_str =timeend.slice(0,2)+ "" + timeend.slice(3,5)
+
+
+    var timestart_int = parseInt(timestart_str)
+    var timeend_int = parseInt(timeend_str)
+    
+    if (timestart_int > 2400 ) {
+      alert("Not a valid start time! Must be within 2400 hours");
+      return false;
+    }
+
+    if (timeend_int > 2400 ) {
+      alert("Not a valid end time! Must be within 2400 hours");
+      return false;
+    }
+
+    if (timestart_int >= timeend_int) {
+      alert("Start time must be before end time!");
+      return false;
+    }
+
+    return true;
+  }
+
+</script>
+
+<script type="text/javascript"> 
+$(function(){
+   $('#timeStart').timepicker({
+       'timeFormat': 'H:i'
+   }); 
+});
+
+$(function(){
+   $('#timeEnd').timepicker({
+   'timeFormat': 'H:i'
+    }); 
+});
+
+$(function() {
+    $("#datepicker").datepicker({minDate: 0}).datepicker("setDate", new Date());
+});
+
+
+</script>
+<!--<script>
+$(function() {
+    $( "#datepicker" ).datepicker();
+});
+</script>-->
+ {% endblock %} 
+ {% block content %}
+    <div class="starter-template">
+        <h1>Please edit your resource details below.</h1>
+        <p class="lead">If you change your availability, unfortunately existing
+        reservations will not be canceled.</p>
+    </div><!-- 
+When a resource is created, it should allow the following data about a resource to be entered: the name, availability hours (will be any two times within the same day, e.g. 9am - 5pm), and a set of tags that describe the type of resource (see below).
+ -->
+    <div class="container">
+        <form id="createResource" method="post" name="createResource" onsubmit=
+        "return validateForm()">
+            <div class="input-group">
+                <span class="input-group-addon" id="basic-addon1">Resource
+                name</span> <input aria-describedby="basic-addon1" class=
+                "form-control" name="resourceName" placeholder="Classroom"
+                required="" type="text" value="{{ resource.name }}">
+            </div>
+            <div class="resourceDetails">
+                <div class="datetimepicker">
+                    <br>
+                    <p>Add your resource availability:</p>
+                    <div class="column-left">
+                        <label class="col-xs-3 control-label">Date</label>
+                        <input id="datepicker" name="date" required="" type=
+                        "text" value="{{ resource.Date }}">
+                        <p></p>
+                    </div>
+                    <div class="column-center">
+                        <p><label class="col-xs-3 control-label">Start
+                        Time</label> <input id="timeStart" name="timeStart"
+                        type="text" value=
+                        "{{ resource.availability.start }}"></p>
+                    </div>
+                    <div class="column-right">
+                        <p><label class="col-xs-3 control-label">End
+                        Time</label> <input id="timeEnd" name="timeEnd" type=
+                        "text" value="{{ resource.availability.end }}"></p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-xs-2 control-label">Tags</label>
+                    <div class="col-xs-9">
+                        <input class="form-control" data-role="tagsinput" name=
+                        "cities" type="text" value=
+                        "{{ resource.tags|replace('[','')|replace(']','') }}">
+                    </div>(comma separated)
+                </div><br>
+                <!--     <div class="form-group">
+        <div class="col-xs-5 col-xs-offset-3">
+            <button type="submit" class="btn btn-default">Validate</button>
+        </div>
+    </div> -->
+            </div><input name="Key" type="hidden" value=
+            "{{ resource.key.urlsafe() }}"> <input class="btn btn-default"
+            type="submit" value="Submit">
+        </form>
+    </div><!--     <form action="/add">
+        <input type="submit" class="btn" value="Add a Reservation">
+    </form>
+
+      <hr>
+
+      <form>Guestbook name:
+        <input value="{{ guestbook_name }}" name="guestbook_name">
+        <input type="submit" value="switch">
+      </form> -->
+    {% endblock %}
+</body>
+</html>

@@ -28,15 +28,18 @@
     line-height: 2 !important;
 }
 
+
 </style>
 
 <script type="text/javascript"> 
   function validateForm() {
-    var name = document.forms["createResource"]["resourceName"].value
-    var date = document.forms["createResource"]["date"].value
+
+    var res_timestart = document.forms["createResource"]["timeStartAvail"].value.toString()
+    var res_timeend = document.forms["createResource"]["timeEndAvail"].value.toString()
+
     var timestart = document.forms["createResource"]["timeStart"].value.toString()
     var timeend = document.forms["createResource"]["timeEnd"].value.toString()
-    var tags = document.forms["createResource"]["tags"].value.toString()
+    var date = document.forms["createResource"]["date"].value.toString()
 
     var re_time = new RegExp("^[0-2][0-9]:[0-5][0-9]$");
 
@@ -50,20 +53,19 @@
       return false;
     }
 
-    var re_date = new RegExp("^[0-1][0-9]/[0-3][0-9]/[2][0][0-9][0-9]$");
-    
-    if (!date.match(re_date)) {
-      alert("Not a valid date!");
-      return false;
-    }
-
     var timestart_str = timestart.slice(0,2)+ "" + timestart.slice(3,5)
     var timeend_str =timeend.slice(0,2)+ "" + timeend.slice(3,5)
 
-
     var timestart_int = parseInt(timestart_str)
     var timeend_int = parseInt(timeend_str)
-    
+
+    var res_timestart_str = res_timestart.slice(0,2)+ "" + res_timestart.slice(3,5)
+    var res_timeend_str = res_timeend.slice(0,2)+ "" + res_timeend.slice(3,5)
+
+    var res_timestart_int = parseInt(res_timestart_str)
+    var res_timeend_int = parseInt(res_timeend_str)
+
+
     if (timestart_int > 2400 ) {
       alert("Not a valid start time! Must be within 2400 hours");
       return false;
@@ -78,6 +80,11 @@
       alert("Start time must be before end time!");
       return false;
     }
+
+    if ((timestart_int < res_timestart_int) || (timeend_int > res_timeend_int )) {
+      alert("Reservation time must be between listed availability!");
+      return false;
+    } 
 
     return true;
   }
@@ -103,71 +110,77 @@ $(function() {
 
 
 </script>
-<!--<script>
-$(function() {
-    $( "#datepicker" ).datepicker();
+<script>
+ $('#rsvp').click(function()
+{   
+    $("#reservations").toggle();     
 });
-</script>-->
-    {% endblock %}
+</script>
+{% endblock %}
 </head>
 {% block content %}
 
-
-
   <div class="starter-template">
-    <h1>Please fill out the form to add a resource!</h1>
-    <p class="lead">You must include a resource name and its available reservation times.</p>
+    <h1>Please fill out the form to reserve a resource!</h1>
+    <p class="lead">You must specify your reservation start and end time to be between the resource availability times.</p>
   </div>
-<!-- 
-When a resource is created, it should allow the following data about a resource to be entered: the name, availability hours (will be any two times within the same day, e.g. 9am - 5pm), and a set of tags that describe the type of resource (see below).
- -->
-
-
- <!-- <div class="container"> -->
 
   <form id="createResource" method="post" onsubmit="return validateForm()">
 
-<div class="input-group">
-  <span class="input-group-addon" id="basic-addon1">Resource name</span>
-  <input name="resourceName" type="text" class="form-control" placeholder="Classroom" aria-describedby="basic-addon1" required>
+<div class="panel alert-info">
+  <div class="panel-body" >
+    <font size="4px"> Creating a reservation for <b>{{ resource.name }}</b></font>
+  </div>
 </div>
-
  <div class="resourceDetails">
+  <h4>It is available from <input name="timeStartAvail" type="text" value="{{ resource.availability.start }}" id="timeStartAvail" disabled/> to <input name="timeEndAvail" type="text" value="{{ resource.availability.end }}" id="timeEndAvail" disabled/>.</h4>
 
  <div class="datetimepicker">
-
-  <br>
-   <p> Add your resource availability:</p>
-
    <div class="column-left">        <label class="col-xs-3 control-label">Date</label>
- <input name="date" type="text" id="datepicker" required></p></div>
+ <input name="date" type="text" id="datepicker" disabled></p></div>
    <div class="column-center"><p> <label class="col-xs-3 control-label">Start Time</label>
   <input name="timeStart" type="text" id="timeStart" required/></p></div>
    <div class="column-right"><p> <label class="col-xs-3 control-label">End Time</label>
   <input name="timeEnd" type="text" id="timeEnd" required/></p></div>
 
 </div>
-    <div class="form-group">
-
-        <label class="col-xs-3 control-label">Tags </label>
-        <div class="col-xs-8" margin-left="0px">
-            <input name="tags" type="text" name="cities" class="form-control"
-                  data-role="tagsinput" />
-        </div>
-        (comma separated)
-    </div>
 <br>
 
-<!--     <div class="form-group">
-        <div class="col-xs-5 col-xs-offset-3">
-            <button type="submit" class="btn btn-default">Validate</button>
-        </div>
-    </div> -->
+
 </div>
-          <input type="submit" class="btn btn-default" value="Submit">
+  <input name="Key" type="hidden" value="{{ resource.key.urlsafe() }}">
+  <input type="submit" class="btn btn-default" value="Submit">
 
 </form>
 
+<div id="reservations">
+Existing reservations
+    {% if rsvps_all|length>0 %}
+<table class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Date</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+    </tr>
+  </thead>
+      {% for rsvp in rsvps_all %}
+
+  <tbody>
+    <tr>
+
+      <td>{{ rsvp.user.identity }}</td>
+      <td>{{ rsvp.time.Date }}</td>
+      <td>{{ rsvp.time.start }}</td>
+      <td>{{ rsvp.time.end }}</td>
+    </tr>
+  </tbody>
+  {% endfor %}
+
+</table>
+    {% endif %}
 </div>
 
+</div>
 {% endblock %}

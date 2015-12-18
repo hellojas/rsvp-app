@@ -6,9 +6,52 @@
      <div class="container">
 
 {% if user %}
-<h2> User Owned Resources <span class="badge">{{ resources_user|length }}</span></h2>
 
-Current user: {{ user.user_id() }} at {{ user.email() }}
+<h2> 
+  <span class = "glyphicon glyphicon glyphicon-time gi-25x"></span> 
+  User Reservations <span class="badge">{{ rsvps_user|length }}</span></h2>
+All resources you created. <br> Click the info icon to see resource details. <br>
+  Click the pencil icon to edit your resource. <br>
+Reservations are sorted from most immediate to later. </br></br>
+
+<table class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>Reservation</th>
+      <th>Date</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th></th>
+    </tr>
+  </thead>
+      {% for rsvp in rsvps_user %}
+
+  <tbody>
+    <tr>
+      <th scope="row">{{ rsvp.resource_name }} </th>
+      <td>{{ rsvp.time.Date }}</td>
+      <td>{{ rsvp.time.start }}</td>
+      <td>{{ rsvp.duration }}</td>
+      <td>
+        <a href="/view?rkey={{ rsvp.resource_key }}">
+          <span class ="glyphicon glyphicon-info-sign gi-15x">
+          </a>
+        <a href="/user?ukey={{ rsvp.user.identity }}">
+          <span class ="glyphicon glyphicon glyphicon-user gi-15x">
+          </a>
+      </td>
+    </tr>
+  </tbody>
+  {% endfor %}
+
+</table>
+
+<h2> 
+  <span class = "glyphicon glyphicon-lock gi-25x"></span> 
+  User Owned Resources <span class="badge">{{ resources_user|length }}</span></h2>
+All resources you created. <br> Click the info icon to see resource details. <br>
+  Click the pencil icon to edit your resource.</br></br>
+<!-- Current user: {{ user.user_id() }} at {{ user.email() }} -->
 
 <table class="table table-sm table-hover">
   <thead>
@@ -17,7 +60,7 @@ Current user: {{ user.user_id() }} at {{ user.email() }}
       <th>Date</th>
       <th>Start Time</th>
       <th>End Time</th>
-      <th>Edit</th>
+      <th></th>
     </tr>
   </thead>
       {% for resource in resources_user %}
@@ -28,7 +71,14 @@ Current user: {{ user.user_id() }} at {{ user.email() }}
       <td>{{ resource.availability.Date }}</td>
       <td>{{ resource.availability.start }}</td>
       <td>{{ resource.availability.end }}</td>
-      <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td>
+      <td>
+        <a href="/view?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon glyphicon-info-sign gi-15x">
+          </a>
+        <a href="/edit?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon glyphicon glyphicon-pencil gi-15x">
+          </a>
+      </td>
     </tr>
   </tbody>
   {% endfor %}
@@ -39,23 +89,33 @@ Current user: {{ user.user_id() }} at {{ user.email() }}
 Viewing as guest, please login to create resources or make reservations!
 {% endif %}
 
-<h2> Available Resources <span class="badge">{{ resources_all|length }}</span></h2>
+<h2>
+ </span> 
+ <span class="glyphicon glyphicon-globe gi-25x"></span> Available Resources <span class="badge">{{ resources_all|length }}</span></h2>
+ </span>All available resources in the system.  <br>
+  Click the info icon to see resource details. <br>
+  Click the bookmark icon to reserve the resource!<br>
+  You can't reserve your own resource. 
+  </br></br>
 <table class="table table-sm table-hover" >
   <thead>
     <tr>
       <th>Name</th>
       <th>Date</th>
-      <th>Star Time</th>
+      <th>Start Time</th>
       <th>End Time</th>
+      <th></th>
+
     </tr>
   </thead>
       {% for resource in resources_all %}
   <tbody>
     <tr>
-      <th scope="row"><a href="/view?rkey={{ resource.key.urlsafe() }}">{{ resource.name }} </a>
+      <th scope="row">{{ resource.name }} 
+</a>
     {% if user %}
     {% if resource.creator.identity == user.user_id() %}
-  <span class="label label-info">yours</span>
+  <span class="label label-info">owner</span>
     {% endif %} 
     {% endif %} 
 
@@ -63,26 +123,25 @@ Viewing as guest, please login to create resources or make reservations!
       <td>{{ resource.availability.Date }}</td>
       <td>{{ resource.availability.start }}</td>
       <td>{{ resource.availability.end }}</td>
+ <td>
+        <a href="/view?rkey={{ resource.key.urlsafe() }}">
+          <span class= "glyphicon glyphicon-info-sign gi-15x">
+          </a>
+        {% if user %}
+          {% if resource.creator.identity != user.user_id() %}
+        <a href="/reserve?rkey={{ resource.key.urlsafe() }}">
+          <span class="glyphicon glyphicon glyphicon-bookmark gi-15x">
+          </a>
+          {% endif %} 
+         {% endif %} 
+        </td>
+
       <!-- <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td> -->
     </tr>
   </tbody>
       {% endfor %}
 </table>
 
-      {% for greeting in greetings %}
-      <div class="row">
-        {% if greeting.author %}
-          <b>{{ greeting.author.email }}
-            {% if user and user.user_id() == greeting.author.identity %}
-              (You)
-            {% endif %}
-          </b> wrote:
-        {% else %}
-         An anonymous person wrote:
-        {% endif %}
-        <blockquote>{{ greeting.content }}</blockquote>
-      </div>
-      {% endfor %}
 
 
     </div>

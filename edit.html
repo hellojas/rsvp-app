@@ -157,13 +157,11 @@ When a resource is created, it should allow the following data about a resource 
                         "{{ resource.tags|replace('[','')|replace(']','') }}">
                     </div>(comma separated)
                 </div><br>
-                <!--     <div class="form-group">
-        <div class="col-xs-5 col-xs-offset-3">
-            <button type="submit" class="btn btn-default">Validate</button>
-        </div>
-    </div> -->
-            </div><input name="Key" type="hidden" value=
-            "{{ resource.key.urlsafe() }}"> <input class="btn btn-default"
+
+            </div>
+            <input name="Key" type="hidden" value=
+            "{{ resource.key.urlsafe() }}"> 
+            <input class="btn btn-default"
             type="submit" value="Submit">
         </form>
     </div><!--     <form action="/add">

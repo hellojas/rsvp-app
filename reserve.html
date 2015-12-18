@@ -28,6 +28,14 @@
     line-height: 2 !important;
 }
 
+.dropdown {
+    display: none;
+    background: #fff;
+    border: 1px solid #999;
+/*    position: absolute;
+*/  position: fixed;
+    padding: 20px;
+}
 
 </style>
 
@@ -120,67 +128,90 @@ $(function() {
 </head>
 {% block content %}
 
-  <div class="starter-template">
-    <h1>Please fill out the form to reserve a resource!</h1>
-    <p class="lead">You must specify your reservation start and end time to be between the resource availability times.</p>
-  </div>
+    <div class="starter-template">
+        <h1>Please fill out the form to reserve a resource!</h1>
+        <p class="lead">You must specify your reservation start and end time to
+        be between the resource availability times.</p>
+    </div>
+    <!-- <div class="container" style="height:0px;"> -->
+        <div class="panel alert-info">
+            <div class="panel-heading">
+              <h3>Create a reservation</h3>
+            </div>
 
-  <form id="createResource" method="post" onsubmit="return validateForm()">
+            <div class="panel-body" >
 
-<div class="panel alert-info">
-  <div class="panel-body" >
-    <font size="4px"> Creating a reservation for <b>{{ resource.name }}</b></font>
-  </div>
-</div>
- <div class="resourceDetails">
-  <h4>It is available from <input name="timeStartAvail" type="text" value="{{ resource.availability.start }}" id="timeStartAvail" disabled/> to <input name="timeEndAvail" type="text" value="{{ resource.availability.end }}" id="timeEndAvail" disabled/>.</h4>
+                <form id="createResource" method="post" name="createResource"
+                onsubmit="return validateForm()">
+                    <h4>{{ resource.name }} is available from <input id=
+                    "timeStartAvail" name="timeStartAvail" type="text" value=
+                    "{{ resource.availability.start }}" disabled> to <input id=
+                    "timeEndAvail" name="timeEndAvail" type="text" value=
+                    "{{ resource.availability.end }}" disabled> on <input disabled id=
+                    "datepicker" name="date" type="text" disabled>.<br>
+                    </h4>
+                    Please select your reservation time below.
 
- <div class="datetimepicker">
-   <div class="column-left">        <label class="col-xs-3 control-label">Date</label>
- <input name="date" type="text" id="datepicker" disabled></p></div>
-   <div class="column-center"><p> <label class="col-xs-3 control-label">Start Time</label>
-  <input name="timeStart" type="text" id="timeStart" required/></p></div>
-   <div class="column-right"><p> <label class="col-xs-3 control-label">End Time</label>
-  <input name="timeEnd" type="text" id="timeEnd" required/></p></div>
+                    <div class="datetimepicker">
+                        <div class="column-left">
+                            <p><label class="col-xs-3 control-label">Start
+                            Time</label> <input id="timeStart" name="timeStart"
+                            type="text"  style="position:absolute;"></p>
+                        </div>
+                        <div class="column-center">
+                            <p><label class="col-xs-3 control-label">End
+                            Time</label> <input id="timeEnd" name="timeEnd"
+                            type="text"></p>
+                        </div>
+                    </div>
+            <input name="Key" type="hidden" value= "{{ resource.key.urlsafe() }}"> 
+            <input class="btn btn-default" type="submit" value="Submit"> 
+                </form>
 
-</div>
-<br>
+          </div>
+        </div>
+    <!-- </div><BR><BR><BR><BR> -->
+    <div id="reservations" style="position:absolute;  overflow:scroll; height:400px;">
+        Existing reservations 
+        {% if rsvps_all|length > 0 %} 
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Resource</th>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for rsvp in rsvps_all %} 
+
+                <tr>
+                    <th scope="row">{{ rsvp.user.identity }}</th>
+                    <td>{{ rsvp.resource_name }}</td>
+                    <td>{{ rsvp.time.Date }}</td>
+                    <td>{{ rsvp.time.start }}</td>
+                    <td>{{ rsvp.duration }}</td>
+                    <td>
+                        <a href=
+                        "/view?rkey={{ rsvp.resource_key }}"><span class=
+                        "glyphicon glyphicon-info-sign gi-15x"></span></a>
+                        <a href=
+                        "/user?ukey={{ rsvp.user.identity }}"><span class=
+                        "glyphicon glyphicon glyphicon-user gi-15x"></span></a>
+                    </td>
+                </tr>
+                    {% endfor %}
+
+            </tbody>
+        </table>
+        {% endif %}
+
+        
+    </div>
 
 
-</div>
-  <input name="Key" type="hidden" value="{{ resource.key.urlsafe() }}">
-  <input type="submit" class="btn btn-default" value="Submit">
-
-</form>
-
-<div id="reservations">
-Existing reservations
-    {% if rsvps_all|length>0 %}
-<table class="table table-sm table-hover">
-  <thead>
-    <tr>
-      <th>User</th>
-      <th>Date</th>
-      <th>Start Time</th>
-      <th>End Time</th>
-    </tr>
-  </thead>
-      {% for rsvp in rsvps_all %}
-
-  <tbody>
-    <tr>
-
-      <td>{{ rsvp.user.identity }}</td>
-      <td>{{ rsvp.time.Date }}</td>
-      <td>{{ rsvp.time.start }}</td>
-      <td>{{ rsvp.time.end }}</td>
-    </tr>
-  </tbody>
-  {% endfor %}
-
-</table>
-    {% endif %}
-</div>
-
-</div>
-{% endblock %}
+    {% endblock %}

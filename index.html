@@ -7,6 +7,14 @@
 
 {% if user %}
 
+{% if rsvp_success == "True" %}
+<div class="alert alert-success" role="alert">Successfully created a reservation!</div>
+{% endif %}
+
+{% if rsvp_success == "False" %}
+<div class="alert alert-danger" role="alert">Unable to create reservation! There was a conflict with existing reservations.</div>
+{% endif %}
+
 <h2> 
   <span class = "glyphicon glyphicon glyphicon-time gi-25x"></span> 
   User Reservations <span class="badge">{{ rsvps_user|length }}</span></h2>
@@ -17,7 +25,8 @@ Reservations are sorted from most immediate to later. </br></br>
 <table class="table table-sm table-hover">
   <thead>
     <tr>
-      <th>Reservation</th>
+      <th>User</th>
+      <th>Resource</th>
       <th>Date</th>
       <th>Start Time</th>
       <th>End Time</th>
@@ -28,12 +37,14 @@ Reservations are sorted from most immediate to later. </br></br>
 
   <tbody>
     <tr>
-      <th scope="row">{{ rsvp.resource_name }} </th>
+      <th scope="row">{{ rsvp.user.identity }} </th>
+      <td>{{ rsvp.resource_name }}</td>
       <td>{{ rsvp.time.Date }}</td>
       <td>{{ rsvp.time.start }}</td>
       <td>{{ rsvp.duration }}</td>
+
       <td>
-        <a href="/view?rkey={{ rsvp.resource_key }}">
+        <a href="/view?rsvp={{ rsvp.resource_key }}">
           <span class ="glyphicon glyphicon-info-sign gi-15x">
           </a>
         <a href="/user?ukey={{ rsvp.user.identity }}">
@@ -47,7 +58,7 @@ Reservations are sorted from most immediate to later. </br></br>
 </table>
 
 <h2> 
-  <span class = "glyphicon glyphicon-lock gi-25x"></span> 
+  <span class = "glyphicon glyphicon-pushpin gi-25x"></span> 
   User Owned Resources <span class="badge">{{ resources_user|length }}</span></h2>
 All resources you created. <br> Click the info icon to see resource details. <br>
   Click the pencil icon to edit your resource.</br></br>

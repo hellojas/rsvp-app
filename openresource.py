@@ -63,6 +63,9 @@ def parseTimeToValue(Date, start, end):
         value += str("".join(end.split(":")))
         return value
 
+def parseHourMinToValue(hr_min):
+    return ((int(hr_min[0:2]) * 60) + int(hr_min[3:5]))
+
 def parseTimeToDuration(start, end):
         duration_str= ""
         duration_value = (int(end[0:2]) * 60 + int(end[3:5])) - (int(start[0:2]) * 60 + int(start[3:5]))
@@ -79,6 +82,28 @@ def parseTimeToDuration(start, end):
             duration_str = "%dM" %duration_value 
         return duration_str
 
+def validReservation(res_start_val, res_end_val, rsvps_all):
+    for existing_rsvp in rsvps_all:
+        blocked_start = parseHourMinToValue(existing_rsvp.time.start)
+        blocked_end = parseHourMinToValue(existing_rsvp.time.end)
+
+        # equal
+        if res_start_val == blocked_start or res_end_val == blocked_end:
+            return False
+
+        # within blocked time
+        if (res_start_val > blocked_start) and (res_end_val < blocked_end):
+            return False
+
+        # starts before block but ends after block
+        if (res_start_val < blocked_start) and (res_end_val > blocked_start):
+            return False
+
+        # ends before block but starts within block
+        if  (res_start_val < blocked_end) and (res_end_val > blocked_end):
+            return False
+
+    return True
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
@@ -99,7 +124,7 @@ class MainPage(webapp2.RequestHandler):
 
             # key = ndb.Key('Author', user.identity)
             # author = key.get()
-            
+
             # if not author:
             #     author = Author(id=user.identity)
             #     author.put()
@@ -269,34 +294,50 @@ class ReserveResourcePage(webapp2.RequestHandler):
 
         key = ndb.Key(urlsafe=self.request.get('rkey'))
         resource = key.get()
-        resource.last_rsvp =  datetime.datetime.now() 
 
-        ## create new reservation object
+        rsvp_success = "False"
 
-        reservation = Reservation()
 
-        if users.get_current_user():
-            reservation.user = Author(
-                identity = user.user_id(),
-                email=user.email())
-
-        reservation.resource_key = key.urlsafe()
-        reservation.resource_name = resource.name
+        rsvp_all_query = Reservation.query(
+            Reservation.resource_key == key.urlsafe()).order(Reservation.sort_value)
+        rsvps_all = rsvp_all_query.fetch()
 
         res_date = resource.availability.Date
         res_start = cgi.escape(self.request.get('timeStart'))
         res_end = cgi.escape(self.request.get('timeEnd'))
 
-        reservation.time = Time(
-            Date = res_date,
-            start = res_start,
-            end = res_end)
+        res_start_val = parseHourMinToValue(res_start)
+        res_end_val = parseHourMinToValue(res_end)
+        res_start_avail_val = parseHourMinToValue(resource.availability.start)
+        res_end_avail_val = parseHourMinToValue(resource.availability.end)
 
-        reservation.duration = parseTimeToDuration(res_start,res_end)
-        reservation.sort_value = parseTimeToValue(res_date, res_start, res_end)
+        if validReservation(res_start_val, res_end_val, rsvps_all):
+        ## create new reservation object
 
-        reservation.put()
-        resource.put()
+            resource.last_rsvp =  datetime.datetime.now() 
+
+            reservation = Reservation()
+
+            if users.get_current_user():
+                reservation.user = Author(
+                    identity = user.user_id(),
+                    email=user.email())
+
+            reservation.resource_key = key.urlsafe()
+            reservation.resource_name = resource.name
+
+            reservation.time = Time(
+                Date = res_date,
+                start = res_start,
+                end = res_end)
+
+            reservation.duration = parseTimeToDuration(res_start,res_end)
+            reservation.sort_value = parseTimeToValue(res_date, res_start, res_end)
+
+            reservation.put()
+            resource.put()
+            rsvp_success = "True"
+
 
         ## get page sections
 
@@ -323,11 +364,13 @@ class ReserveResourcePage(webapp2.RequestHandler):
             'url_linktext': url_linktext,
             'resources_all':resources_all,
             'resources_user':resources_user,
-            'rsvps_user': rsvps_user
+            'rsvps_user': rsvps_user,
+            'rsvp_success':rsvp_success,
         }
 
-        self.redirect('/')
 
+        template = JINJA_ENVIRONMENT.get_template('index.html')
+        self.response.write(template.render(template_values))
 
 class ViewResourcePage(webapp2.RequestHandler):
 
@@ -352,6 +395,43 @@ class ViewResourcePage(webapp2.RequestHandler):
         }
 
         template = JINJA_ENVIRONMENT.get_template('view.html')
+        self.response.write(template.render(template_values))
+
+class ViewUserPage(webapp2.RequestHandler):
+
+    def get(self):
+
+        # key = ndb.Key(urlsafe=self.request.get('ukey'))
+        # base64.b64decode
+        key = self.request.get('ukey')
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        resource_query_user = Resource.query(
+            Resource.creator == Author(identity = key)).order(-Resource.last_rsvp)
+        resources_user = resource_query_user.fetch()
+
+
+        rsvp_user_query = Reservation.query(
+            Reservation.user == Author(
+                    identity = key)).order(Reservation.sort_value)
+        rsvps_user = rsvp_user_query.fetch()
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resources_user':resources_user,
+            'rsvps_user': rsvps_user,
+            'username': key
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('user.html')
         self.response.write(template.render(template_values))
 
 class EditResourcePage(webapp2.RequestHandler):
@@ -392,11 +472,6 @@ class EditResourcePage(webapp2.RequestHandler):
 
         key = ndb.Key(urlsafe=self.request.get('rkey'))
         resource = key.get()
-
-        # if users.get_current_user():
-        #     resource.creator = Author(
-        #         identity = user.user_id(),
-        #         email=user.email())
 
         resource.name = cgi.escape(self.request.get('resourceName'))
 
@@ -488,6 +563,7 @@ app = webapp2.WSGIApplication([
     ('/view', ViewResourcePage),
     ('/edit', EditResourcePage),
     ('/tags',TagsQueryPage),
-    ('/reserve', ReserveResourcePage)
+    ('/reserve', ReserveResourcePage),
+    ('/user', ViewUserPage)
 
 ], debug=True)

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}OpenResource - View User Details {% endblock %}
+{% block head %}
+
+
+{% endblock %}
+
+
+{% block content %}
+<br><br>
+<div class="container">
+  
+{% if username %}
+
+<h1>Viewing Details for User {{ username }} </h1><BR>
+
+<h2> 
+  <span class = "glyphicon glyphicon glyphicon-time gi-25x"></span> 
+  Reservations <span class="badge">{{ rsvps_user|length }}</span></h2>
+All resources you created. <br> Click the info icon to see resource details. <br>
+  Click the pencil icon to edit your resource. <br>
+Reservations are sorted from most immediate to later. </br></br>
+
+<table class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Resource</th>
+      <th>Date</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th></th>
+    </tr>
+  </thead>
+      {% for rsvp in rsvps_user %}
+
+  <tbody>
+    <tr>
+      <th scope="row">{{ rsvp.user.identity }} </th>
+      <td>{{ rsvp.resource_name }} </td>
+      <td>{{ rsvp.time.Date }}</td>
+      <td>{{ rsvp.time.start }}</td>
+      <td>{{ rsvp.duration }}</td>
+      <td>
+        <a href="/view?rkey={{ rsvp.resource_key }}">
+          <span class ="glyphicon glyphicon-info-sign gi-15x">
+          </a>
+        <a href="/user?ukey={{ rsvp.user.identity }}">
+          <span class ="glyphicon glyphicon glyphicon-user gi-15x">
+          </a>
+      </td>
+    </tr>
+  </tbody>
+  {% endfor %}
+
+</table>
+
+<h2> 
+  <span class = "glyphicon glyphicon-lock gi-25x"></span> 
+  Resources <span class="badge">{{ resources_user|length }}</span></h2>
+All resources you created. <br> Click the info icon to see resource details. <br>
+  Click the pencil icon to edit your resource.</br></br>
+<!-- Current user: {{ user.user_id() }} at {{ user.email() }} -->
+
+<table class="table table-sm table-hover">
+  <thead>
+    <tr>
+      <th>Resource</th>
+      <th>Date</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th></th>
+    </tr>
+  </thead>
+      {% for resource in resources_user %}
+
+  <tbody>
+    <tr>
+      <th scope="row">{{ resource.name }} </th>
+      <td>{{ resource.availability.Date }}</td>
+      <td>{{ resource.availability.start }}</td>
+      <td>{{ resource.availability.end }}</td>
+      <td>
+        <a href="/view?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon glyphicon-info-sign gi-15x">
+          </a>
+        <a href="/edit?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon glyphicon glyphicon-pencil gi-15x">
+          </a>
+      </td>
+    </tr>
+  </tbody>
+  {% endfor %}
+
+</table>
+
+{% endif %}
+
+  </div>
+</div>
+
+<nav>
+  <ul class="pager">
+    <li><a href="/">Back</a></li>
+  </ul>
+</nav>
+
+    </div>
+{% endblock %}

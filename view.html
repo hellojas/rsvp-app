@@ -3,31 +3,13 @@
 {% block head %}
 
 
-<script type="text/javascript">
-
-function selectTag(){
-  var item = document.getElementById("relatedTags");
-
-  var myselect = document.getElementById("tagOption");
-  // alert(myselect.options[myselect.selectedIndex].value);
-  if (myselect.options[myselect.selectedIndex].value != 'Select Tag') {
-    if (item) {
-    if(item.className == 'hidden'){
-        item.className = 'unhidden';
-          document.getElementById('tagsQuery').src = "google.com";
-    }
-  }}
-}
-
-</script>
-
-
 {% endblock %}
 
 
 {% block content %}
 <br><br>
 <div class="container">
+  
 {% if resource %}
 
 <div class="panel panel-info">
@@ -60,7 +42,7 @@ function selectTag(){
   </div>
     <div class="panel-body">
 
-<select class="form-control"  onchange="document.getElementById('tagsQuery').src = this.options[this.selectedIndex].value" id="tagOption">>
+<select class="form-control"  onchange="document.getElementById('tagsQuery').src = this.options[this.selectedIndex].value" id="tagOption">
   <option value="" disabled selected style="display:none;">Search by current resource tag!</option>
       {% for tag in resource.tags %}
       <option value="/tags?label={{ tag }}">{{ tag }}</option>

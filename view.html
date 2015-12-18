@@ -34,6 +34,58 @@
     </div>
   </div>
 
+{% if rsvps_all %}
+<div class="panel panel-info">
+  <div class="panel-heading">
+        <h3 class="panel-title"> Existing reservations </h3>
+  </div>
+    <div id="reservations" style="overflow:scroll; height:250px;">
+        {% if rsvps_all|length > 0 %} 
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Resource</th>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for rsvp in rsvps_all %} 
+
+                <tr>
+                    <th scope="row">{{ rsvp.user.identity }}</th>
+                    <td>{{ rsvp.resource_name }}</td>
+                    <td>{{ rsvp.time.Date }}</td>
+                    <td>{{ rsvp.time.start }}</td>
+                    <td>{{ rsvp.duration }}</td>
+                    <td>
+                        <a href=
+                        "/view?rkey={{ rsvp.resource_key }}"><span class=
+                        "glyphicon glyphicon-info-sign gi-15x"></span></a>
+                        <a href=
+                        "/user?ukey={{ rsvp.user.identity }}"><span class=
+                        "glyphicon glyphicon glyphicon-user gi-15x"></span></a>
+                        {% if rsvp.user.identity == user.user_id() %}
+                        <a href="/delete?rsvpkey={{ rsvp.key.urlsafe() }}">
+                          <span class ="glyphicon glyphicon glyphicon-trash gi-15x">
+                          </a>
+                          {% endif %}
+                    </td>
+                </tr>
+                    {% endfor %}
+
+            </tbody>
+        </table>
+        {% endif %}
+        
+    </div>
+{% endif %}
+    </div>
+  </div>
 
 {% if resource.tags|length > 0 %} 
 <div class="panel panel-info">

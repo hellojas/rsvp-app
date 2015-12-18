@@ -387,11 +387,16 @@ class ViewResourcePage(webapp2.RequestHandler):
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
 
+        rsvp_all_query = Reservation.query(
+            Reservation.resource_key == key.urlsafe()).order(Reservation.sort_value)
+        rsvps_all = rsvp_all_query.fetch()
+
         template_values = {
             'user': user,
             'url': url,
             'url_linktext': url_linktext,
             'resource': resource,
+            'rsvps_all':rsvps_all
         }
 
         template = JINJA_ENVIRONMENT.get_template('view.html')
@@ -516,7 +521,9 @@ class EditResourcePage(webapp2.RequestHandler):
             'resources_user':resources_user,
         }
 
-        self.redirect('/')
+
+        template = JINJA_ENVIRONMENT.get_template('index.html')
+        self.response.write(template.render(template_values))
 
 class TagsQueryPage(webapp2.RequestHandler):
 
@@ -557,6 +564,70 @@ class TagsQueryPage(webapp2.RequestHandler):
             self.response.write(template.render(template_values))    
 
 
+class DeleteReservation(webapp2.RequestHandler):
+
+    def get(self):
+        delete_success = "False"
+
+        try:
+            key = ndb.Key(urlsafe=self.request.get('rsvpkey'))
+            key.delete()
+            delete_success = "True"
+        except:
+            delete_success = "False"
+
+
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+
+        resource_query_all = Resource.query().order(Resource.last_rsvp)
+        resources_all = resource_query_all.fetch()
+
+        if user:
+
+            # key = ndb.Key('Author', user.identity)
+            # author = key.get()
+
+            # if not author:
+            #     author = Author(id=user.identity)
+            #     author.put()
+
+            resource_query_user = Resource.query(
+                Resource.creator == Author(
+                    identity = user.user_id(),
+                    email=user.email())).order(Resource.last_rsvp)
+                
+            resources_user = resource_query_user.fetch()
+
+            rsvp_user_query = Reservation.query(
+                Reservation.user == Author(
+                        identity = user.user_id(),
+                        email=user.email())).order(Reservation.sort_value)
+            rsvps_user = rsvp_user_query.fetch()
+        else:
+            resources_user = []
+            rsvps_user = []
+
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resources_all':resources_all,
+            'resources_user':resources_user,
+            'rsvps_user': rsvps_user,
+            'delete_success':delete_success
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('index.html')
+        self.response.write(template.render(template_values))
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/add', AddResourcePage),
@@ -564,6 +635,7 @@ app = webapp2.WSGIApplication([
     ('/edit', EditResourcePage),
     ('/tags',TagsQueryPage),
     ('/reserve', ReserveResourcePage),
-    ('/user', ViewUserPage)
+    ('/user', ViewUserPage),
+    ('/delete', DeleteReservation)
 
 ], debug=True)

@@ -202,6 +202,11 @@ $(function() {
                         <a href=
                         "/user?ukey={{ rsvp.user.identity }}"><span class=
                         "glyphicon glyphicon glyphicon-user gi-15x"></span></a>
+                        {% if rsvp.user.identity == user.user_id() %}
+                        <a href="/delete?rsvpkey={{ rsvp.key.urlsafe() }}">
+                          <span class ="glyphicon glyphicon glyphicon-trash gi-15x">
+                          </a>
+                          {% endif %}
                     </td>
                 </tr>
                     {% endfor %}

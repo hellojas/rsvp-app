@@ -11,8 +11,9 @@ import urlparse
 import cgi
 
 import datetime
-from pytz import timezone
+from pytz.gae import pytz
 
+from lxml import etree
 
 # from app import Author
 # from app import Reservation
@@ -88,11 +89,18 @@ def cleanReservations():
     rsvp_all_query = Reservation.query()
     rsvps_all = rsvp_all_query.fetch()
 
+    # tz = pytz.timezone('US/Eastern')
+    # datetime_obj = tz.normalize(tz.localize(datetime.datetime.now()))
+
     datetime_obj = datetime.datetime.now()
     year = datetime_obj.timetuple()[0]
     month = datetime_obj.timetuple()[1]
     day = datetime_obj.timetuple()[2]
-    hour = datetime_obj.timetuple()[3]
+    if datetime_obj.timetuple()[3]-5 < 0:
+        hour = 24 - (5-datetime_obj.timetuple()[3])
+    else:
+        hour = datetime_obj.timetuple()[3]-5
+
     minutes = datetime_obj.timetuple()[4]
 
     for rsvp in rsvps_all:
@@ -111,12 +119,12 @@ def cleanReservations():
             else:
                 if rsvp_day > day:
                     delete_rsvp = True
-                # else:
-                #     if rsvp_hour < hour:
-                #         delete_rsvp = True
-                #     else:
-                #         if rsvp_min < minutes:
-                #             delete_rsvp = True
+                else:
+                    if rsvp_hour < hour:
+                        delete_rsvp = True
+                    else:
+                        if rsvp_min < minutes:
+                            delete_rsvp = True
 
         if delete_rsvp:
             key = rsvp.key
@@ -144,6 +152,20 @@ def validReservation(res_start_val, res_end_val, rsvps_all):
             return False
 
     return True
+
+
+def dumpToRss(rsvps_user):
+    root = etree.Element('root')
+    # root.append(etree.Element('child'))
+    # another child with text
+    for rsvp in rsvps_user:
+        child = etree.Element('child')
+        child.text = rsvp.resource_name
+        root.append(child)
+    s = etree.tostring(root, pretty_print=True)
+
+    return s
+
 class MainPage(webapp2.RequestHandler):
 
     def get(self):
@@ -163,13 +185,6 @@ class MainPage(webapp2.RequestHandler):
 
         if user:
 
-            # key = ndb.Key('Author', user.identity)
-            # author = key.get()
-
-            # if not author:
-            #     author = Author(id=user.identity)
-            #     author.put()
-
             resource_query_user = Resource.query(
                 Resource.creator == Author(
                     identity = user.user_id(),
@@ -186,15 +201,6 @@ class MainPage(webapp2.RequestHandler):
             resources_user = []
             rsvps_user = []
 
-
-        datetime_obj = datetime.datetime.now()
-        year = datetime_obj.timetuple()[0]
-        month = datetime_obj.timetuple()[1]
-        day = datetime_obj.timetuple()[2]
-        hour = datetime_obj.timetuple()[3]
-        minutes = datetime_obj.timetuple()[4]
-
-
         template_values = {
             'user': user,
             'url': url,
@@ -202,7 +208,6 @@ class MainPage(webapp2.RequestHandler):
             'resources_all':resources_all,
             'resources_user':resources_user,
             'rsvps_user': rsvps_user,
-            'now':datetime.datetime.now()
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -264,9 +269,6 @@ class AddResourcePage(webapp2.RequestHandler):
             Date = res_date,
             start = res_start,
             end = res_end)
-
-        # resource.last_rsvp = parseTimeToValue(
-        #     res_date, res_start, res_end)
 
         res_tags = cgi.escape(self.request.get('tags')).split(",")
 
@@ -422,6 +424,39 @@ class ReserveResourcePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
 
+
+class ResourceRssPage(webapp2.RequestHandler):
+
+    def get(self):
+
+        key = ndb.Key(urlsafe=self.request.get('rkey'))
+        resource = key.get()
+
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        rsvp_all_query = Reservation.query(
+            Reservation.resource_key == key.urlsafe()).order(Reservation.sort_value)
+        rsvps_all = rsvp_all_query.fetch()
+
+        # rsvps_all_rss = dumpToRss(rsvps_all)
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resource': resource,
+            'rsvps_all':rsvps_all
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('rss.html')
+        self.response.write(template.render(template_values))
+
 class ViewResourcePage(webapp2.RequestHandler):
 
     def get(self):
@@ -451,6 +486,7 @@ class ViewResourcePage(webapp2.RequestHandler):
 
         template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(template_values))
+
 
 class ViewUserPage(webapp2.RequestHandler):
 
@@ -686,6 +722,8 @@ app = webapp2.WSGIApplication([
     ('/tags',TagsQueryPage),
     ('/reserve', ReserveResourcePage),
     ('/user', ViewUserPage),
-    ('/delete', DeleteReservation)
+    ('/delete', DeleteReservation),
+    ('/rss', ResourceRssPage)
+
 
 ], debug=True)

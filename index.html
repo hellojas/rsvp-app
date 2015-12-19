@@ -4,7 +4,6 @@
 {% block content %}
 <br><br>
      <div class="container">
-{{ now }}
 {% if user %}
 
 {% if rsvp_success == "True" %}
@@ -22,8 +21,6 @@
 {% if delete_success == "False" %}
 <div class="alert alert-danger" role="alert">Unable to delete the reservation!</div>
 {% endif %}
-
-
 <h2> 
   <span class = "glyphicon glyphicon glyphicon-time gi-25x"></span> 
   User Reservations <span class="badge">{{ rsvps_user|length }}</span></h2>
@@ -103,6 +100,9 @@ All resources you created. <br> Click the info icon to see resource details. <br
         <a href="/edit?rkey={{ resource.key.urlsafe() }}">
           <span class ="glyphicon glyphicon glyphicon-pencil gi-15x">
           </a>
+        <a href="/rss?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon  glyphicon glyphicon-export gi-15x">
+          </a>
           {% endif %}
       </td>
     </tr>
@@ -159,7 +159,10 @@ Viewing as guest, please login to create resources or make reservations!
           <span class="glyphicon glyphicon glyphicon-bookmark gi-15x">
           </a>
           {% endif %} 
-         {% endif %} 
+         {% endif %}             
+         <a href="/rss?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon  glyphicon glyphicon-export gi-15x">
+          </a>
         </td>
 
       <!-- <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td> -->

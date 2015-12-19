@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}OpenResource - View Resource Details {% endblock %}
+{% block head %}
+
+
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+
+ <h2>RSS feed for resource item <b>{{ resource.name }}</b></h2><BR>
+&lt;Reservations&gt;<br>
+{% for rsvp in rsvps_all %}
+&emsp;&lt;Reservation&gt;<BR>
+&emsp;&emsp;&lt;Resource&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Name&gt;{{ rsvp.resource_name }}&lt;/Name&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Key&gt;{{ rsvp.resource_key }}&lt;/Key&gt;<BR>
+
+&emsp;&emsp;&lt;/Resource&gt;<BR>
+&emsp;&emsp;&lt;Created&gt;{{ rsvp.created }}&lt;/Created&gt;<BR>
+
+&emsp;&emsp;&lt;User&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Identity&gt;{{ rsvp.user.identity }}&lt;/Identity&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Email&gt;{{ rsvp.user.email }}&lt;/Email&gt;<BR>
+&emsp;&emsp;&lt;/User&gt;<BR>
+&emsp;&emsp;&lt;Time&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Date&gt;{{ rsvp.time.Date }}&lt;/Date&gt;<BR>
+&emsp;&emsp;&emsp;&lt;StartTime&gt;{{ rsvp.time.start }}&lt;/StartTime&gt;<BR>
+&emsp;&emsp;&emsp;&lt;EndTime&gt;{{ rsvp.time.end }}&lt;/EndTime&gt;<BR>
+&emsp;&emsp;&emsp;&lt;Duration&gt;{{ rsvp.duration }}&lt;/Duration&gt;<BR>
+
+&emsp;&emsp;&lt;/Time&gt;<BR>
+&emsp;&lt;/Reservation&gt;<BR>
+
+{% endfor %}
+&lt;/Reservations&gt;<BR>
+
+</div>
+{% endblock %}

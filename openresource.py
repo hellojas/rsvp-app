@@ -11,6 +11,8 @@ import urlparse
 import cgi
 
 import datetime
+from pytz import timezone
+
 
 # from app import Author
 # from app import Reservation
@@ -82,6 +84,44 @@ def parseTimeToDuration(start, end):
             duration_str = "%dM" %duration_value 
         return duration_str
 
+def cleanReservations():
+    rsvp_all_query = Reservation.query()
+    rsvps_all = rsvp_all_query.fetch()
+
+    datetime_obj = datetime.datetime.now()
+    year = datetime_obj.timetuple()[0]
+    month = datetime_obj.timetuple()[1]
+    day = datetime_obj.timetuple()[2]
+    hour = datetime_obj.timetuple()[3]
+    minutes = datetime_obj.timetuple()[4]
+
+    for rsvp in rsvps_all:
+        dates = rsvp.time.Date.split("/")
+        rsvp_mon = int(dates[0])
+        rsvp_day = int(dates[1])
+        rsvp_year = int(dates[2])
+        rsvp_hour = int(rsvp.time.end[0:2])
+        rsvp_min = int(rsvp.time.end[3:5])
+
+        delete_rsvp = False
+
+        if rsvp_year == year:
+            if rsvp_mon < month:
+                delete_rsvp = True
+            else:
+                if rsvp_day > day:
+                    delete_rsvp = True
+                # else:
+                #     if rsvp_hour < hour:
+                #         delete_rsvp = True
+                #     else:
+                #         if rsvp_min < minutes:
+                #             delete_rsvp = True
+
+        if delete_rsvp:
+            key = rsvp.key
+            key.delete()
+
 def validReservation(res_start_val, res_end_val, rsvps_all):
     for existing_rsvp in rsvps_all:
         blocked_start = parseHourMinToValue(existing_rsvp.time.start)
@@ -116,8 +156,9 @@ class MainPage(webapp2.RequestHandler):
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
 
+        cleanReservations()
 
-        resource_query_all = Resource.query().order(Resource.last_rsvp)
+        resource_query_all = Resource.query().order(-Resource.last_rsvp)
         resources_all = resource_query_all.fetch()
 
         if user:
@@ -146,13 +187,22 @@ class MainPage(webapp2.RequestHandler):
             rsvps_user = []
 
 
+        datetime_obj = datetime.datetime.now()
+        year = datetime_obj.timetuple()[0]
+        month = datetime_obj.timetuple()[1]
+        day = datetime_obj.timetuple()[2]
+        hour = datetime_obj.timetuple()[3]
+        minutes = datetime_obj.timetuple()[4]
+
+
         template_values = {
             'user': user,
             'url': url,
             'url_linktext': url_linktext,
             'resources_all':resources_all,
             'resources_user':resources_user,
-            'rsvps_user': rsvps_user
+            'rsvps_user': rsvps_user,
+            'now':datetime.datetime.now()
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')

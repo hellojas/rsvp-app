@@ -4,11 +4,11 @@
 {% block content %}
 <br><br>
      <div class="container">
-
+{{ now }}
 {% if user %}
 
 {% if rsvp_success == "True" %}
-<div class="alert alert-success" role="alert">Successfully created a reservation!</div>
+<div class="alert alert-success" role="alert">Successfully created a reservation! (Refresh to see update!)</div>
 {% endif %}
 
 {% if rsvp_success == "False" %}
@@ -98,9 +98,12 @@ All resources you created. <br> Click the info icon to see resource details. <br
         <a href="/view?rkey={{ resource.key.urlsafe() }}">
           <span class ="glyphicon glyphicon-info-sign gi-15x">
           </a>
+              {% if resource.creator.identity == user.user_id() %}
+
         <a href="/edit?rkey={{ resource.key.urlsafe() }}">
           <span class ="glyphicon glyphicon glyphicon-pencil gi-15x">
           </a>
+          {% endif %}
       </td>
     </tr>
   </tbody>

@@ -23,23 +23,25 @@
         Start Time: {{ resource.availability.start }} <br>
         End Time: {{ resource.availability.end }} <br>
         Tags: {{ resource.tags }} <br>
-
+        <br>
         {% if user and user.user_id() == resource.creator.identity %}
-          <a href="/edit?rkey={{ resource.key.urlsafe() }}">Edit</a></td>
+          <a href="/edit?rkey={{ resource.key.urlsafe() }}"><b>Edit</b></a></td>
         {% else %}
-          <a href="/reserve?rkey={{ resource.key.urlsafe() }}">Reserve</a></td>
+          <a href="/reserve?rkey={{ resource.key.urlsafe() }}"><b>Reserve</b></a></td>
         {% endif %}
       </font>
       <br>
     </div>
   </div>
 
-{% if rsvps_all %}
 <div class="panel panel-info">
   <div class="panel-heading">
         <h3 class="panel-title"> Existing reservations </h3>
   </div>
+  {% if rsvps_all %}
+
     <div id="reservations" style="overflow:scroll; height:250px;">
+
         {% if rsvps_all|length > 0 %} 
         <table class="table table-sm table-hover">
             <thead>
@@ -80,10 +82,16 @@
 
             </tbody>
         </table>
-        {% endif %}
-        
+         {% endif %}
+
+    {% else %}
+  <div class="panel-body">
+
+    No reservations found!
+  </div>
+    {% endif %}
+
     </div>
-{% endif %}
     </div>
   </div>
 

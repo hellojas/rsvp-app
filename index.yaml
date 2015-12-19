@@ -1,6 +1,18 @@
 indexes:
-- kind: Greeting
-  ancestor: yes
+- kind: Tag
   properties:
-  - name: date
+  - name: label
     direction: desc
+- kind: Author
+  properties:
+  - name: identity
+    direction: desc
+  - name: email
+- kind: Resource
+  properties:
+  - name: tags
+    direction: desc
+  - name: last_rsvp
+- kind: Reservation
+  properties:
+  - name: resource_key

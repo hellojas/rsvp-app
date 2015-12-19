@@ -11,9 +11,6 @@ import urlparse
 import cgi
 
 import datetime
-from pytz.gae import pytz
-
-from lxml import etree
 
 # from app import Author
 # from app import Reservation

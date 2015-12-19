@@ -2,7 +2,6 @@
 {% block title %}OpenResource - View Resource Details {% endblock %}
 {% block head %}
 
-
 {% endblock %}
 
 
@@ -25,10 +24,15 @@
         Tags: {{ resource.tags }} <br>
         <br>
         {% if user and user.user_id() == resource.creator.identity %}
-          <a href="/edit?rkey={{ resource.key.urlsafe() }}"><b>Edit</b></a></td>
+          <a href="/edit?rkey={{ resource.key.urlsafe() }}"><b>Edit</b></a><br>
         {% else %}
-          <a href="/reserve?rkey={{ resource.key.urlsafe() }}"><b>Reserve</b></a></td>
+          <a href="/reserve?rkey={{ resource.key.urlsafe() }}"><b>Reserve</b></a><br>
         {% endif %}
+                  <a href="/user?ukey={{ resource.creator.identity }}"><b>View User Details</b></a><br>
+
+          <a href="/rss?rkey={{ resource.key.urlsafe() }}"><b>Export RSS</b></a><br>
+
+          </a> 
       </font>
       <br>
     </div>

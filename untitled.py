@@ -12,6 +12,10 @@ import cgi
 
 import datetime
 
+from pytz.gae import pytz
+
+from lxml import etree
+
 # from app import Author
 # from app import Reservation
 # from app import Resource
@@ -23,15 +27,11 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     autoescape=True)
 
 class Time(ndb.Model):
-    """Sub model for representing a time."""
-
     Date = ndb.StringProperty(indexed=False)
     start = ndb.StringProperty(indexed=False)
     end = ndb.StringProperty(indexed=False)
 
 class Tag(ndb.Model):
-    """Sub model for representing a tag."""
-
     label = ndb.StringProperty(indexed=True)
 
     def __repr__(self):
@@ -43,7 +43,7 @@ class Author(ndb.Model):
     email = ndb.StringProperty(indexed=True)
 
 class Resource(ndb.Model):
-    """Sub model for representing a resource."""
+    """A main model for representing an individual Guestbook entry."""
     creator = ndb.StructuredProperty(Author)
     name = ndb.StringProperty(indexed=False)
     tags = ndb.StructuredProperty(Tag, repeated=True)
@@ -51,7 +51,6 @@ class Resource(ndb.Model):
     last_rsvp = ndb.DateTimeProperty(auto_now_add=True)
 
 class Reservation(ndb.Model):
-    """Sub model for representing a resource."""
     user = ndb.StructuredProperty(Author)
     created = ndb.DateTimeProperty(auto_now_add=True)
     time = ndb.StructuredProperty(Time)
@@ -61,53 +60,42 @@ class Reservation(ndb.Model):
     resource_name = ndb.StringProperty(indexed=False)
 
 def parseTimeToValue(Date, start, end):
-    """Sub model for representing a reservation."""
-    value = ""
-    dates = Date.split("/")
-    value = str(dates[2]) + str(dates[0]) + str(dates[1])
-    value += str("".join(start.split(":")))
-    value += str("".join(end.split(":")))
-    return value
+        value = ""
+        dates = Date.split("/")
+        value = str(dates[2]) + str(dates[0]) + str(dates[1])
+        value += str("".join(start.split(":")))
+        value += str("".join(end.split(":")))
+        return value
 
 def parseHourMinToValue(hr_min):
-    """Parsing a time class to equivalent value."""
     return ((int(hr_min[0:2]) * 60) + int(hr_min[3:5]))
 
 def parseTimeToDuration(start, end):
-    """Parsing a start and end time (HH:MM) to duration value"""
-    duration_str= ""
-    duration_value = (int(end[0:2]) * 60 + int(end[3:5])) - (int(start[0:2]) * 60 + int(start[3:5]))
-    if duration_value >= 60:
-        hours = duration_value/60
-
-        if duration_value % 60 == 0:
+        duration_str= ""
+        duration_value = (int(end[0:2]) * 60 + int(end[3:5])) - (int(start[0:2]) * 60 + int(start[3:5]))
+        if duration_value >= 60:
             hours = duration_value/60
-            duration_str = "%dH" %(hours)
+
+            if duration_value % 60 == 0:
+                hours = duration_value/60
+                duration_str = "%dH" %(hours)
+            else:
+                minutes = duration_value - (hours*60)
+                duration_str = "%dH%dM" %(hours,minutes)
         else:
-            minutes = duration_value - (hours*60)
-            duration_str = "%dH%dM" %(hours,minutes)
-    else:
-        duration_str = "%dM" %duration_value 
-    return duration_str
+            duration_str = "%dM" %duration_value 
+        return duration_str
 
 def cleanReservations():
-    """Remove old reservations. Set to EST"""
-
     rsvp_all_query = Reservation.query()
     rsvps_all = rsvp_all_query.fetch()
+    tz = pytz.timezone('US/Eastern')
 
-    # tz = pytz.timezone('US/Eastern')
-    # datetime_obj = tz.normalize(tz.localize(datetime.datetime.now()))
-
-    datetime_obj = datetime.datetime.now()
+    datetime_obj = tz.localize(datetime.datetime.now())
     year = datetime_obj.timetuple()[0]
     month = datetime_obj.timetuple()[1]
     day = datetime_obj.timetuple()[2]
-    if datetime_obj.timetuple()[3]-5 < 0:
-        hour = 24 - (5-datetime_obj.timetuple()[3])
-    else:
-        hour = datetime_obj.timetuple()[3]-5
-
+    hour = datetime_obj.timetuple()[3]
     minutes = datetime_obj.timetuple()[4]
 
     for rsvp in rsvps_all:
@@ -138,8 +126,6 @@ def cleanReservations():
             key.delete()
 
 def validReservation(res_start_val, res_end_val, rsvps_all):
-    """Check if submitted rsvp time is not in conflict"""
-
     for existing_rsvp in rsvps_all:
         blocked_start = parseHourMinToValue(existing_rsvp.time.start)
         blocked_end = parseHourMinToValue(existing_rsvp.time.end)
@@ -162,10 +148,7 @@ def validReservation(res_start_val, res_end_val, rsvps_all):
 
     return True
 
-
 def dumpToRss(rsvps_user):
-    """Dump to RSS"""
-
     root = etree.Element('root')
     # root.append(etree.Element('child'))
     # another child with text
@@ -177,29 +160,7 @@ def dumpToRss(rsvps_user):
 
     return s
 
-class AboutPage(webapp2.RequestHandler):
-
-    def get(self):
-
-        user = users.get_current_user()
-        if user:
-            url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-        else:
-            url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-        template_values = {
-            'user': user,
-            'url': url,
-            'url_linktext': url_linktext,
-        }
-
-        template = JINJA_ENVIRONMENT.get_template('about.html')
-        self.response.write(template.render(template_values))
-
 class MainPage(webapp2.RequestHandler):
-    """Main page with user resource, user rsvp, and all system rsvp"""
 
     def get(self):
 
@@ -234,6 +195,15 @@ class MainPage(webapp2.RequestHandler):
             resources_user = []
             rsvps_user = []
 
+
+        datetime_obj = datetime.datetime.now()
+        year = datetime_obj.timetuple()[0]
+        month = datetime_obj.timetuple()[1]
+        day = datetime_obj.timetuple()[2]
+        hour = datetime_obj.timetuple()[3]
+        minutes = datetime_obj.timetuple()[4]
+
+
         template_values = {
             'user': user,
             'url': url,
@@ -241,13 +211,13 @@ class MainPage(webapp2.RequestHandler):
             'resources_all':resources_all,
             'resources_user':resources_user,
             'rsvps_user': rsvps_user,
+            'now':datetime.datetime.now()
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
 
 class AddResourcePage(webapp2.RequestHandler):
-    """Page to create a new resource"""
 
     def get(self):
 
@@ -304,6 +274,9 @@ class AddResourcePage(webapp2.RequestHandler):
             start = res_start,
             end = res_end)
 
+        # resource.last_rsvp = parseTimeToValue(
+        #     res_date, res_start, res_end)
+
         res_tags = cgi.escape(self.request.get('tags')).split(",")
 
         for tag_str in res_tags:
@@ -336,7 +309,6 @@ class AddResourcePage(webapp2.RequestHandler):
         self.redirect('/')
 
 class ReserveResourcePage(webapp2.RequestHandler):
-    """Page to reserve a new resource"""
 
     def get(self):
 
@@ -459,42 +431,7 @@ class ReserveResourcePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('index.html')
         self.response.write(template.render(template_values))
 
-
-class ResourceRssPage(webapp2.RequestHandler):
-    """Page to dump resource rsvp to rss"""
-
-    def get(self):
-
-        key = ndb.Key(urlsafe=self.request.get('rkey'))
-        resource = key.get()
-
-        user = users.get_current_user()
-        if user:
-            url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-        else:
-            url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
-
-        rsvp_all_query = Reservation.query(
-            Reservation.resource_key == key.urlsafe()).order(Reservation.sort_value)
-        rsvps_all = rsvp_all_query.fetch()
-
-        # rsvps_all_rss = dumpToRss(rsvps_all)
-
-        template_values = {
-            'user': user,
-            'url': url,
-            'url_linktext': url_linktext,
-            'resource': resource,
-            'rsvps_all':rsvps_all
-        }
-
-        template = JINJA_ENVIRONMENT.get_template('rss.html')
-        self.response.write(template.render(template_values))
-
 class ViewResourcePage(webapp2.RequestHandler):
-    """Page to view resource details"""
 
     def get(self):
 
@@ -524,9 +461,7 @@ class ViewResourcePage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('view.html')
         self.response.write(template.render(template_values))
 
-
-class ViewUserPage(webapp2.RequestHandler):
-    """Page to view user details"""
+class ResourceRssPage(webapp2.RequestHandler):
 
     def get(self):
 
@@ -561,8 +496,43 @@ class ViewUserPage(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('user.html')
         self.response.write(template.render(template_values))
 
+
+class ViewUserPage(webapp2.RequestHandler):
+
+    def get(self):
+
+        key = self.request.get('ukey')
+        user = users.get_current_user()
+        if user:
+            url = users.create_logout_url(self.request.uri)
+            url_linktext = 'Logout'
+        else:
+            url = users.create_login_url(self.request.uri)
+            url_linktext = 'Login'
+
+        resource_query_user = Resource.query(
+            Resource.creator == Author(identity = key)).order(-Resource.last_rsvp)
+        resources_user = resource_query_user.fetch()
+
+
+        rsvp_user_query = Reservation.query(
+            Reservation.user == Author(
+                    identity = key)).order(Reservation.sort_value)
+        rsvps_user = rsvp_user_query.fetch()
+
+        template_values = {
+            'user': user,
+            'url': url,
+            'url_linktext': url_linktext,
+            'resources_user':resources_user,
+            'rsvps_user_rss': rsvps_user_rss,
+            'username': key
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('user.html')
+        self.response.write(template.render(template_values))
+
 class EditResourcePage(webapp2.RequestHandler):
-    """Page to edit resource details"""
 
     def get(self):
 
@@ -649,7 +619,6 @@ class EditResourcePage(webapp2.RequestHandler):
         self.response.write(template.render(template_values))
 
 class TagsQueryPage(webapp2.RequestHandler):
-    """Page to search by tags"""
 
     def get(self):
 
@@ -689,7 +658,6 @@ class TagsQueryPage(webapp2.RequestHandler):
 
 
 class DeleteReservation(webapp2.RequestHandler):
-    """Page to delete existing rsvp"""
 
     def get(self):
         delete_success = "False"
@@ -715,13 +683,6 @@ class DeleteReservation(webapp2.RequestHandler):
         resources_all = resource_query_all.fetch()
 
         if user:
-
-            # key = ndb.Key('Author', user.identity)
-            # author = key.get()
-
-            # if not author:
-            #     author = Author(id=user.identity)
-            #     author.put()
 
             resource_query_user = Resource.query(
                 Resource.creator == Author(
@@ -755,7 +716,6 @@ class DeleteReservation(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/about', AboutPage),
     ('/add', AddResourcePage),
     ('/view', ViewResourcePage),
     ('/edit', EditResourcePage),
@@ -764,6 +724,5 @@ app = webapp2.WSGIApplication([
     ('/user', ViewUserPage),
     ('/delete', DeleteReservation),
     ('/rss', ResourceRssPage)
-
 
 ], debug=True)

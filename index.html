@@ -22,10 +22,14 @@
 <div class="alert alert-danger" role="alert">Unable to delete the reservation!</div>
 {% endif %}
 <h2> 
+<br><br>
+
   <span class = "glyphicon glyphicon glyphicon-time gi-25x"></span> 
   User Reservations <span class="badge">{{ rsvps_user|length }}</span></h2>
-All resources you created. <br> Click the info icon to see resource details. <br>
-  Click the pencil icon to edit your resource. <br>
+All reservations you created. <br> 
+Click the info icon to see resource details.  <br> 
+Click the user icon to see user details.  <br> 
+Click the trash icon to trash your reservation <br> 
 Reservations are sorted from most immediate to later. </br></br>
 
 <table class="table table-sm table-hover">
@@ -65,14 +69,15 @@ Reservations are sorted from most immediate to later. </br></br>
   {% endfor %}
 
 </table>
-
-<h2> 
+<br>
+<h2>
   <span class = "glyphicon glyphicon-pushpin gi-25x"></span> 
   User Owned Resources <span class="badge">{{ resources_user|length }}</span></h2>
 All resources you created. <br> Click the info icon to see resource details. <br>
-  Click the pencil icon to edit your resource.</br></br>
-<!-- Current user: {{ user.user_id() }} at {{ user.email() }} -->
+  Click the pencil icon to edit your resource.<br>
+    Click the export icon to see resource RSS details. <br>
 
+  <a href="/add"> Add a resource.</a><br><br>
 <table class="table table-sm table-hover">
   <thead>
     <tr>
@@ -117,10 +122,14 @@ Viewing as guest, please login to create resources or make reservations!
 
 <h2>
  </span> 
+ <br>
+
  <span class="glyphicon glyphicon-globe gi-25x"></span> Available Resources <span class="badge">{{ resources_all|length }}</span></h2>
  </span>All available resources in the system.  <br>
   Click the info icon to see resource details. <br>
-  Click the bookmark icon to reserve the resource!<br>
+  Click the bookmark icon to reserve the resource.<br>
+  Click the export icon to see resource RSS details. <br>
+
   You can't reserve your own resource. 
   </br></br>
 <table class="table table-sm table-hover" >
@@ -158,14 +167,20 @@ Viewing as guest, please login to create resources or make reservations!
         <a href="/reserve?rkey={{ resource.key.urlsafe() }}">
           <span class="glyphicon glyphicon glyphicon-bookmark gi-15x">
           </a>
+          {% else %}
+          <a href="/edit?rkey={{ resource.key.urlsafe() }}">
+          <span class ="glyphicon glyphicon glyphicon-pencil gi-15x">
+          </a>
           {% endif %} 
-         {% endif %}             
+         {% endif %}  
+        <a href="/user?ukey={{ resource.creator.identity }}">
+          <span class ="glyphicon glyphicon glyphicon-user gi-15x">
+          </a>           
          <a href="/rss?rkey={{ resource.key.urlsafe() }}">
           <span class ="glyphicon  glyphicon glyphicon-export gi-15x">
           </a>
         </td>
 
-      <!-- <td><a href="/view?rkey={{ resource.key.urlsafe() }}">View</a></td> -->
     </tr>
   </tbody>
       {% endfor %}
